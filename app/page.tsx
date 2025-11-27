@@ -1,8 +1,11 @@
 // app/page.tsx
 
+import TopNav from "./components/TopNav";
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
+      <TopNav />
+      {/* tumhara existing hero + sections yahan se niche waise hi rehne do */}
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#0A3D91] via-[#102A5C] to-[#0A3D91] text-white">
         <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-16 md:flex-row md:items-center md:py-24">
