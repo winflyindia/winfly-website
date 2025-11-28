@@ -7,26 +7,117 @@ export const metadata: Metadata = {
     "Sample WinFly financial health dashboard showing how your investments, loans and insurance can be viewed in one place.",
 };
 
+// ---------------- Health Score Logic ----------------
+
+type HealthInputs = {
+  monthlyIncome: number;           // e.g. 80000
+  totalEmi: number;                // e.g. 35000
+  goalCoveragePct: number;         // 0–100
+  protectionCoveragePct: number;   // 0–100
+  emergencyFundMonths: number;     // e.g. 2.5
+};
+
+type HealthResult = {
+  score: number;         // 0–100
+  band: "Excellent" | "Good" | "Needs Attention" | "Critical";
+  breakdown: {
+    goalScore: number;
+    debtScore: number;
+    protectionScore: number;
+    liquidityScore: number;
+  };
+};
+
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, value));
+
+function calculateHealthScore(inputs: HealthInputs): HealthResult {
+  const {
+    monthlyIncome,
+    totalEmi,
+    goalCoveragePct,
+    protectionCoveragePct,
+    emergencyFundMonths,
+  } = inputs;
+
+  // --- Goal score ---
+  const goalScore = clamp(goalCoveragePct, 0, 100);
+
+  // --- Debt score ---
+  let debtScore = 0;
+  if (!monthlyIncome || monthlyIncome <= 0) {
+    // if income missing, neutral-ish score
+    debtScore = 50;
+  } else {
+    const emiRatio = totalEmi / monthlyIncome;
+
+    if (emiRatio <= 0.25) debtScore = 95;
+    else if (emiRatio <= 0.4) debtScore = 80;
+    else if (emiRatio <= 0.6) debtScore = 55;
+    else debtScore = 25;
+  }
+
+  // --- Protection score ---
+  const protectionScore = clamp(protectionCoveragePct, 0, 100);
+
+  // --- Liquidity score ---
+  let liquidityScore = 0;
+  if (emergencyFundMonths <= 0) liquidityScore = 5;
+  else if (emergencyFundMonths < 1) liquidityScore = 20;
+  else if (emergencyFundMonths < 3) liquidityScore = 50;
+  else if (emergencyFundMonths < 6) liquidityScore = 80;
+  else liquidityScore = 100;
+
+  // --- Weighted final score ---
+  const rawScore =
+    goalScore * 0.35 +
+    debtScore * 0.25 +
+    protectionScore * 0.25 +
+    liquidityScore * 0.15;
+
+  const score = Math.round(rawScore);
+
+  let band: HealthResult["band"];
+  if (score >= 80) band = "Excellent";
+  else if (score >= 65) band = "Good";
+  else if (score >= 50) band = "Needs Attention";
+  else band = "Critical";
+
+  return {
+    score,
+    band,
+    breakdown: {
+      goalScore,
+      debtScore,
+      protectionScore,
+      liquidityScore,
+    },
+  };
+}
+
+// ---------------- Dashboard Page (Demo) ----------------
+
 export default function DashboardPage() {
-  // Abhi ke liye static demo data
+  // Abhi ke liye DEMO static inputs (client se aane wale data ka sample)
+  const sampleInputs: HealthInputs = {
+    monthlyIncome: 80000,          // 80k per month
+    totalEmi: 34000,               // total EMIs
+    goalCoveragePct: 78,           // goals 78% covered
+    protectionCoveragePct: 65,     // protection 65% of required
+    emergencyFundMonths: 2.5,      // 2.5 months expenses saved
+  };
+
+  const result = calculateHealthScore(sampleInputs);
+  const { score, band, breakdown } = result;
+
+  // Risk profile abhi demo ke liye fix rakhte hain
   const riskProfile = "Balanced";
-  const goalCoverage = 78;
-  const debtStress = "Medium";
-
-  const investments = {
-    status: "On track",
-    note: "SIP running for major goals, minor gap in retirement planning.",
-  };
-
-  const loans = {
-    status: "Needs review",
-    note: "Total EMI is 42% of monthly income. Scope for restructuring / prepayment.",
-  };
-
-  const insurance = {
-    status: "Adequate",
-    note: "Term cover ok, slight shortfall in health + parents medical cover.",
-  };
+  const debtStressLabel =
+    breakdown.debtScore >= 80
+      ? "Low"
+      : breakdown.debtScore >= 55
+      ? "Medium"
+      : "High";
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
@@ -35,12 +126,16 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-slate-900 md:text-3xl">
-              WinFly Dashboard <span className="text-xs align-middle text-slate-500">(Demo)</span>
+              WinFly Dashboard{" "}
+              <span className="text-xs align-middle text-slate-500">
+                (Demo)
+              </span>
             </h1>
-            <p className="mt-1 text-sm text-slate-600 max-w-xl">
+            <p className="mt-1 max-w-xl text-sm text-slate-600">
               Ye ek sample view hai jo dikhata hai ki future me WinFly aapke
-              investments, loans aur insurance ko ek consolidated dashboard
-              me kaise show karega.
+              investments, loans, insurance aur cashflow ko ek consolidated
+              dashboard me kaise show karega – saath me ek simple{" "}
+              <span className="font-semibold">WinFly Financial Health Score</span>.
             </p>
           </div>
           <p className="mt-2 text-[11px] text-slate-500 md:text-right">
@@ -49,46 +144,121 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Top metrics */}
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Risk Profile
+        {/* Top Health Score Card */}
+        <div className="mt-8 grid gap-4 md:grid-cols-[2fr,1fr]">
+          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              WinFly Financial Health Score
             </p>
-            <p className="mt-2 text-xl font-semibold text-[#0A3D91]">
-              {riskProfile}
-            </p>
-            <p className="mt-1 text-xs text-slate-500">
-              Based on risk questionnaire &amp; current investments.
+            <div className="mt-3 flex flex-wrap items-baseline gap-3">
+              <p className="text-4xl font-semibold text-[#0A3D91]">
+                {score}
+                <span className="text-lg text-slate-400">/100</span>
+              </p>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                {band}
+              </span>
+            </div>
+            <p className="mt-3 text-sm text-slate-600">
+              Ye score 4 pillars par based hai –{" "}
+              <span className="font-semibold">
+                goals, loans, protection aur emergency fund
+              </span>
+              . Simple weighted formula se ek overall picture milti hai jisse
+              hum samajh sakte hain ki sabse pehle kaha kaam karna hai.
             </p>
           </div>
 
+          <div className="rounded-2xl bg-slate-900 p-5 text-slate-50 text-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">
+              Quick Snapshot
+            </p>
+            <ul className="mt-3 space-y-2 text-xs">
+              <li>
+                • Risk Profile:{" "}
+                <span className="font-semibold text-white">{riskProfile}</span>
+              </li>
+              <li>
+                • EMI Load:{" "}
+                <span className="font-semibold text-white">
+                  {(sampleInputs.totalEmi / sampleInputs.monthlyIncome * 100).toFixed(0)}%
+                </span>{" "}
+                of income ({debtStressLabel} stress)
+              </li>
+              <li>
+                • Goal Coverage:{" "}
+                <span className="font-semibold text-white">
+                  {sampleInputs.goalCoveragePct}%
+                </span>
+              </li>
+              <li>
+                • Protection Coverage:{" "}
+                <span className="font-semibold text-white">
+                  {sampleInputs.protectionCoveragePct}%
+                </span>
+              </li>
+              <li>
+                • Emergency Fund:{" "}
+                <span className="font-semibold text-white">
+                  {sampleInputs.emergencyFundMonths} months
+                </span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Sub-scores cards */}
+        <div className="mt-8 grid gap-4 md:grid-cols-4">
           <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Goal Coverage
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              Goals / Investments
             </p>
             <p className="mt-2 text-xl font-semibold text-emerald-600">
-              {goalCoverage}%
+              {breakdown.goalScore}/100
             </p>
-            <p className="mt-1 text-xs text-slate-500">
-              How much of your key life goals are currently funded.
+            <p className="mt-1 text-[11px] text-slate-500">
+              Goal-based planning &amp; current investments ka coverage.
             </p>
           </div>
 
           <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Debt Stress
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              Loans / Debt
             </p>
             <p className="mt-2 text-xl font-semibold text-amber-600">
-              {debtStress}
+              {breakdown.debtScore}/100
             </p>
-            <p className="mt-1 text-xs text-slate-500">
-              EMI to income ratio &amp; overall loan structure health.
+            <p className="mt-1 text-[11px] text-slate-500">
+              EMI load, interest cost aur loan structure health.
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              Protection
+            </p>
+            <p className="mt-2 text-xl font-semibold text-sky-600">
+              {breakdown.protectionScore}/100
+            </p>
+            <p className="mt-1 text-[11px] text-slate-500">
+              Term, health aur family protection ki strength.
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              Liquidity
+            </p>
+            <p className="mt-2 text-xl font-semibold text-purple-600">
+              {breakdown.liquidityScore}/100
+            </p>
+            <p className="mt-1 text-[11px] text-slate-500">
+              Emergency fund &amp; cash buffer for tough times.
             </p>
           </div>
         </div>
 
-        {/* Key areas: Investments / Loans / Insurance */}
+        {/* Detail blocks like pehle */}
         <div className="mt-8 grid gap-5 md:grid-cols-3">
           {/* Investments */}
           <div className="flex flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
@@ -97,11 +267,21 @@ export default function DashboardPage() {
             </p>
             <p className="mt-2 text-sm font-semibold text-slate-900">
               Status:{" "}
-              <span className="text-emerald-600">{investments.status}</span>
+              <span className="text-emerald-600">
+                {breakdown.goalScore >= 80
+                  ? "On Track"
+                  : breakdown.goalScore >= 60
+                  ? "Improving"
+                  : "Gap Present"}
+              </span>
             </p>
-            <p className="mt-2 flex-1 text-sm text-slate-600">{investments.note}</p>
+            <p className="mt-2 flex-1 text-sm text-slate-600">
+              SIPs aur long term investments major goals ko{" "}
+              {sampleInputs.goalCoveragePct}% tak cover kar rahe hain. Next step –
+              gap wali goals par additional SIP ya restructuring plan banana.
+            </p>
             <ul className="mt-3 space-y-1 text-xs text-slate-500">
-              <li>• Goal-based SIP mapping</li>
+              <li>• Goal-wise SIP mapping</li>
               <li>• Asset allocation vs risk profile</li>
               <li>• Periodic portfolio review</li>
             </ul>
@@ -114,9 +294,20 @@ export default function DashboardPage() {
             </p>
             <p className="mt-2 text-sm font-semibold text-slate-900">
               Status:{" "}
-              <span className="text-amber-600">{loans.status}</span>
+              <span className="text-amber-600">
+                {debtStressLabel === "Low"
+                  ? "Comfortable"
+                  : debtStressLabel === "Medium"
+                  ? "Needs Optimisation"
+                  : "High Stress"}
+              </span>
             </p>
-            <p className="mt-2 flex-1 text-sm text-slate-600">{loans.note}</p>
+            <p className="mt-2 flex-1 text-sm text-slate-600">
+              Current EMI load approx{" "}
+              {(sampleInputs.totalEmi / sampleInputs.monthlyIncome * 100).toFixed(0)}
+              % hai. Prepayment, refinance ya restructuring options evaluate karne
+              se overall health score improve ho sakta hai.
+            </p>
             <ul className="mt-3 space-y-1 text-xs text-slate-500">
               <li>• All EMIs in one view</li>
               <li>• Interest cost &amp; tenure analysis</li>
@@ -131,9 +322,20 @@ export default function DashboardPage() {
             </p>
             <p className="mt-2 text-sm font-semibold text-slate-900">
               Status:{" "}
-              <span className="text-sky-600">{insurance.status}</span>
+              <span className="text-sky-600">
+                {breakdown.protectionScore >= 80
+                  ? "Adequate"
+                  : breakdown.protectionScore >= 60
+                  ? "Almost There"
+                  : "Under Insured"}
+              </span>
             </p>
-            <p className="mt-2 flex-1 text-sm text-slate-600">{insurance.note}</p>
+            <p className="mt-2 flex-1 text-sm text-slate-600">
+              Protection coverage currently{" "}
+              {sampleInputs.protectionCoveragePct}% estimated need ke aas-paas hai.
+              Focus areas – term cover, health cover &amp; parents ke medical
+              expenses ka buffer.
+            </p>
             <ul className="mt-3 space-y-1 text-xs text-slate-500">
               <li>• Term cover vs income &amp; liabilities</li>
               <li>• Health cover for family &amp; parents</li>
