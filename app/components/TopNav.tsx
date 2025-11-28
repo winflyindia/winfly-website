@@ -6,6 +6,7 @@ const navLinks = [
   { href: "/about", label: "About" },
   { href: "/services", label: "Services" },
   { href: "/contact", label: "Contact" },
+  { href: "/dashboard", label: "Dashboard (Demo)" },
 ];
 
 export default function TopNav() {
@@ -22,7 +23,7 @@ export default function TopNav() {
               WinFly India
             </p>
             <p className="text-[11px] text-slate-500">
-              Financial Services Pvt. Ltd.
+              Services Pvt. Ltd.
             </p>
           </div>
         </Link>
