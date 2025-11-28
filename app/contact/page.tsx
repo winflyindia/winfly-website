@@ -1,33 +1,70 @@
 // app/contact/page.tsx
+"use client";
+
+import { useState, FormEvent } from "react";
 
 export default function ContactPage() {
+  const [fullName, setFullName] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [email, setEmail] = useState("");
+  const [helpType, setHelpType] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+
+    // Safety: mobile required
+    if (!fullName || !mobile) {
+      alert("Please enter at least your name and mobile number.");
+      return;
+    }
+
+    const lines = [
+      "New WinFly enquiry 👇",
+      "",
+      `Name: ${fullName}`,
+      `Mobile: ${mobile}`,
+      email ? `Email: ${email}` : "",
+      helpType ? `Need help with: ${helpType}` : "",
+      message ? `Message: ${message}` : "",
+      "",
+      "Source: WinFly Website Contact Page",
+    ].filter(Boolean);
+
+    const text = encodeURIComponent(lines.join("\n"));
+
+    // Tumhara WhatsApp number
+    const whatsappUrl = `https://wa.me/919667205638?text=${text}`;
+    window.open(whatsappUrl, "_blank");
+  };
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
       <section className="mx-auto max-w-5xl px-4 py-12">
-        <h1 className="text-3xl font-semibold text-slate-900">
-          Contact Us
-        </h1>
+        <h1 className="text-3xl font-semibold text-slate-900">Contact Us</h1>
         <p className="mt-3 text-sm text-slate-600">
-          Financial clarity chahiye? Form fill kijiye ya direct WhatsApp / call
-          se connect ho jaaiye.
+          Financial clarity chahiye? Form fill kijiye – details ke saath direct
+          WhatsApp chat open ho jaayegi.
         </p>
 
         <div className="mt-8 grid gap-8 md:grid-cols-[1.3fr,1fr]">
           {/* Form */}
           <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
-            <form className="space-y-4 text-sm">
+            <form className="space-y-4 text-sm" onSubmit={handleSubmit}>
               <div>
                 <label
                   htmlFor="fullName"
                   className="block text-xs font-semibold text-slate-700"
                 >
-                  Full Name
+                  Full Name*
                 </label>
                 <input
                   id="fullName"
                   type="text"
                   className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[#0A3D91]"
                   placeholder="Enter your name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                 />
               </div>
 
@@ -37,13 +74,15 @@ export default function ContactPage() {
                     htmlFor="mobile"
                     className="block text-xs font-semibold text-slate-700"
                   >
-                    Mobile Number
+                    Mobile Number*
                   </label>
                   <input
                     id="mobile"
                     type="tel"
                     className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[#0A3D91]"
                     placeholder="10 digit mobile"
+                    value={mobile}
+                    onChange={(e) => setMobile(e.target.value)}
                   />
                 </div>
                 <div>
@@ -58,6 +97,8 @@ export default function ContactPage() {
                     type="email"
                     className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[#0A3D91]"
                     placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
               </div>
@@ -72,8 +113,10 @@ export default function ContactPage() {
                 <select
                   id="helpType"
                   className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[#0A3D91]"
+                  value={helpType}
+                  onChange={(e) => setHelpType(e.target.value)}
                 >
-                  <option>Choose an option</option>
+                  <option value="">Choose an option</option>
                   <option>Loan advisory</option>
                   <option>Mutual funds / SIP planning</option>
                   <option>Insurance guidance</option>
@@ -94,19 +137,21 @@ export default function ContactPage() {
                   className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[#0A3D91]"
                   rows={4}
                   placeholder="Briefly describe your current situation..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
                 />
               </div>
 
               <button
-                type="button"
+                type="submit"
                 className="w-full rounded-full bg-[#0A3D91] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0c3273]"
               >
-                Submit (Coming Soon)
+                Submit & Open WhatsApp
               </button>
 
               <p className="text-[11px] text-slate-500">
-                Form submission integration in progress. For faster response,
-                please use WhatsApp button on the right.
+                Form submit karte hi WhatsApp par auto-filled message open ho
+                jaayega. Aap send karke chat start kar sakte hain.
               </p>
             </form>
           </div>
