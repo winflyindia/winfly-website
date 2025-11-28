@@ -1,5 +1,3 @@
-import TopNav from "../components/TopNav";
-
 const services = [
   {
     title: "Investment & SIP Planning",
