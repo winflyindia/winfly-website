@@ -13,7 +13,6 @@ export default function ContactPage() {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
 
-    // Safety: mobile required
     if (!fullName || !mobile) {
       alert("Please enter at least your name and mobile number.");
       return;
@@ -32,8 +31,6 @@ export default function ContactPage() {
     ].filter(Boolean);
 
     const text = encodeURIComponent(lines.join("\n"));
-
-    // Tumhara WhatsApp number
     const whatsappUrl = `https://wa.me/919667205638?text=${text}`;
     window.open(whatsappUrl, "_blank");
   };
@@ -52,14 +49,10 @@ export default function ContactPage() {
           <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
             <form className="space-y-4 text-sm" onSubmit={handleSubmit}>
               <div>
-                <label
-                  htmlFor="fullName"
-                  className="block text-xs font-semibold text-slate-700"
-                >
+                <label className="block text-xs font-semibold text-slate-700">
                   Full Name*
                 </label>
                 <input
-                  id="fullName"
                   type="text"
                   className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[#0A3D91]"
                   placeholder="Enter your name"
@@ -70,14 +63,10 @@ export default function ContactPage() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label
-                    htmlFor="mobile"
-                    className="block text-xs font-semibold text-slate-700"
-                  >
+                  <label className="block text-xs font-semibold text-slate-700">
                     Mobile Number*
                   </label>
                   <input
-                    id="mobile"
                     type="tel"
                     className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[#0A3D91]"
                     placeholder="10 digit mobile"
@@ -85,15 +74,12 @@ export default function ContactPage() {
                     onChange={(e) => setMobile(e.target.value)}
                   />
                 </div>
+
                 <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-xs font-semibold text-slate-700"
-                  >
+                  <label className="block text-xs font-semibold text-slate-700">
                     Email (optional)
                   </label>
                   <input
-                    id="email"
                     type="email"
                     className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[#0A3D91]"
                     placeholder="you@example.com"
@@ -104,14 +90,10 @@ export default function ContactPage() {
               </div>
 
               <div>
-                <label
-                  htmlFor="helpType"
-                  className="block text-xs font-semibold text-slate-700"
-                >
+                <label className="block text-xs font-semibold text-slate-700">
                   What do you need help with?
                 </label>
                 <select
-                  id="helpType"
                   className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[#0A3D91]"
                   value={helpType}
                   onChange={(e) => setHelpType(e.target.value)}
@@ -126,17 +108,13 @@ export default function ContactPage() {
               </div>
 
               <div>
-                <label
-                  htmlFor="message"
-                  className="block text-xs font-semibold text-slate-700"
-                >
+                <label className="block text-xs font-semibold text-slate-700">
                   Message / Details
                 </label>
                 <textarea
-                  id="message"
                   className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-[#0A3D91]"
                   rows={4}
-                  placeholder="Briefly describe your current situation..."
+                  placeholder="Briefly describe your situation…"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                 />
@@ -148,11 +126,6 @@ export default function ContactPage() {
               >
                 Submit & Open WhatsApp
               </button>
-
-              <p className="text-[11px] text-slate-500">
-                Form submit karte hi WhatsApp par auto-filled message open ho
-                jaayega. Aap send karke chat start kar sakte hain.
-              </p>
             </form>
           </div>
 
@@ -175,7 +148,7 @@ export default function ContactPage() {
 
               <a
                 href="https://wa.me/919667205638"
-                className="mt-4 inline-block rounded-full bg-[#25D366] px-5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#1ebe5b]"
+                className="mt-4 inline-block rounded-full bg-[#25D366] px-5 py-2 text-xs font-semibold text-white hover:bg-[#1ebe5b]"
               >
                 Chat on WhatsApp
               </a>

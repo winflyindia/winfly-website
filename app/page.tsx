@@ -1,5 +1,12 @@
 // app/page.tsx
+import type { Metadata } from "next";
+import Image from "next/image";
 
+export const metadata: Metadata = {
+  title: "About WinFly India Services Private Limited",
+  description:
+    "WinFly India Services Private Limited is a DPIIT & MSME registered startup simplifying investments, loans and insurance for Indian families.",
+};
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
@@ -143,6 +150,85 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+{/* PARTNERED COMPANIES */}
+<section className="bg-white">
+  <div className="mx-auto max-w-6xl px-4 py-12">
+    <h2 className="text-2xl font-semibold text-slate-900 text-center">
+      Our Partnered Companies
+    </h2>
+    <p className="mt-2 max-w-xl mx-auto text-center text-sm text-slate-600">
+      WinFly leading financial platforms ke saath partnered hai jinke through
+      hum Mutual Funds, Share Market, Insurance aur Loans provide karte hain.
+    </p>
+
+    <div className="mt-8 grid gap-6 md:grid-cols-3">
+      {/* Wealthy */}
+      <div className="rounded-2xl bg-slate-50 p-6 shadow-sm ring-1 ring-slate-100 flex flex-col items-center">
+        <div className="relative h-14 w-14 overflow-hidden rounded-full bg-white ring-1 ring-slate-200">
+          <Image
+            src="/partners/wealthy.png"
+            alt="Wealthy logo"
+            fill
+            className="object-cover"
+          />
+        </div>
+        <h3 className="mt-3 text-base font-semibold text-slate-900">
+          Wealthy
+        </h3>
+        <p className="mt-2 text-center text-sm text-slate-600">
+          Through Wealthy, WinFly clients ko{" "}
+          <span className="font-semibold">
+            Mutual Funds, Share Market &amp; Insurance
+          </span>{" "}
+          solutions milte hain – completely digital &amp; compliant way.
+        </p>
+      </div>
+
+      {/* InvestKraft */}
+      <div className="rounded-2xl bg-slate-50 p-6 shadow-sm ring-1 ring-slate-100 flex flex-col items-center">
+        <div className="relative h-14 w-14 overflow-hidden rounded-full bg-white ring-1 ring-slate-200">
+          <Image
+            src="/partners/investkraft.png"
+            alt="InvestKraft logo"
+            fill
+            className="object-contain p-1"
+          />
+        </div>
+        <h3 className="mt-3 text-base font-semibold text-slate-900">
+          InvestKraft
+        </h3>
+        <p className="mt-2 text-center text-sm text-slate-600">
+          InvestKraft ke through hum{" "}
+          <span className="font-semibold">
+            personal, home, business &amp; other loans
+          </span>{" "}
+          ke liye comparison, documentation &amp; support provide karte hain.
+        </p>
+      </div>
+
+      {/* Lendingkart */}
+      <div className="rounded-2xl bg-slate-50 p-6 shadow-sm ring-1 ring-slate-100 flex flex-col items-center">
+        <div className="relative h-14 w-14 overflow-hidden rounded-full bg-white ring-1 ring-slate-200">
+          <Image
+            src="/partners/lendingkart.png"
+            alt="Lendingkart logo"
+            fill
+            className="object-cover"
+          />
+        </div>
+        <h3 className="mt-3 text-base font-semibold text-slate-900">
+          Lendingkart
+        </h3>
+        <p className="mt-2 text-center text-sm text-slate-600">
+          Lendingkart humara trusted partner hai{" "}
+          <span className="font-semibold">Business Loans &amp; MSME finance</span>{" "}
+          ke liye – specially small &amp; growing enterprises ke support ke liye.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
 
       {/* HOW WINFLY HELPS */}
       <section className="bg-slate-50">

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 type HealthInputs = {
   monthlyIncome: number;           // e.g. 80000
-  totalEmi: number;                // e.g. 35000
+  totalEmi: number;                // e.g. 34000
   goalCoveragePct: number;         // 0–100
   protectionCoveragePct: number;   // 0–100
   emergencyFundMonths: number;     // e.g. 2.5
@@ -46,8 +46,7 @@ function calculateHealthScore(inputs: HealthInputs): HealthResult {
   // --- Debt score ---
   let debtScore = 0;
   if (!monthlyIncome || monthlyIncome <= 0) {
-    // if income missing, neutral-ish score
-    debtScore = 50;
+    debtScore = 50; // neutral if missing
   } else {
     const emiRatio = totalEmi / monthlyIncome;
 
@@ -95,23 +94,76 @@ function calculateHealthScore(inputs: HealthInputs): HealthResult {
   };
 }
 
-// ---------------- Dashboard Page (Demo) ----------------
+// ---------------- Dashboard Page (Demo + URL-driven) ----------------
 
-export default function DashboardPage() {
-  // Abhi ke liye DEMO static inputs (client se aane wale data ka sample)
-  const sampleInputs: HealthInputs = {
-    monthlyIncome: 80000,          // 80k per month
-    totalEmi: 34000,               // total EMIs
-    goalCoveragePct: 78,           // goals 78% covered
-    protectionCoveragePct: 65,     // protection 65% of required
-    emergencyFundMonths: 2.5,      // 2.5 months expenses saved
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  // Next 16: searchParams is a Promise
+  const params = await searchParams;
+
+  // Helper to parse numbers from query
+  const getNumber = (
+    value: string | string[] | undefined
+  ): number | undefined => {
+    if (Array.isArray(value)) value = value[0];
+    if (value === undefined) return undefined;
+    const n = Number(value);
+    return Number.isFinite(n) ? n : undefined;
   };
 
-  const result = calculateHealthScore(sampleInputs);
+  // Default demo inputs
+  const defaultInputs: HealthInputs = {
+    monthlyIncome: 80000,
+    totalEmi: 34000,
+    goalCoveragePct: 78,
+    protectionCoveragePct: 65,
+    emergencyFundMonths: 2.5,
+  };
+
+  // Read from URL if provided (from params)
+  const incomeParam = getNumber(params?.income);
+  const emiParam = getNumber(params?.emi);
+  const goalsParam = getNumber(params?.goals);
+  const protectionParam = getNumber(params?.protection);
+  const emergencyParam = getNumber(params?.emergency);
+
+  const clientName = Array.isArray(params?.name)
+    ? params?.name[0]
+    : params?.name;
+
+  const usingCustom =
+    incomeParam !== undefined ||
+    emiParam !== undefined ||
+    goalsParam !== undefined ||
+    protectionParam !== undefined ||
+    emergencyParam !== undefined;
+
+  const inputs: HealthInputs = {
+    monthlyIncome: incomeParam ?? defaultInputs.monthlyIncome,
+    totalEmi: emiParam ?? defaultInputs.totalEmi,
+    goalCoveragePct: goalsParam ?? defaultInputs.goalCoveragePct,
+    protectionCoveragePct:
+      protectionParam ?? defaultInputs.protectionCoveragePct,
+    emergencyFundMonths:
+      emergencyParam ?? defaultInputs.emergencyFundMonths,
+  };
+
+  const result = calculateHealthScore(inputs);
   const { score, band, breakdown } = result;
 
-  // Risk profile abhi demo ke liye fix rakhte hain
-  const riskProfile = "Balanced";
+  const emiRatio =
+    inputs.monthlyIncome > 0
+      ? inputs.totalEmi / inputs.monthlyIncome
+      : undefined;
+  const emiRatioPctText =
+    emiRatio !== undefined && Number.isFinite(emiRatio)
+      ? `${(emiRatio * 100).toFixed(0)}%`
+      : "—";
+
+  const riskProfile = "Balanced"; // demo for now
   const debtStressLabel =
     breakdown.debtScore >= 80
       ? "Low"
@@ -135,12 +187,34 @@ export default function DashboardPage() {
               Ye ek sample view hai jo dikhata hai ki future me WinFly aapke
               investments, loans, insurance aur cashflow ko ek consolidated
               dashboard me kaise show karega – saath me ek simple{" "}
-              <span className="font-semibold">WinFly Financial Health Score</span>.
+              <span className="font-semibold">
+                WinFly Financial Health Score
+              </span>
+              .
             </p>
+            {usingCustom && (
+              <p className="mt-2 text-xs text-emerald-700">
+                Currently showing example for{" "}
+                <span className="font-semibold">
+                  {clientName || "Custom Inputs"}
+                </span>{" "}
+                (values taken from URL parameters).
+              </p>
+            )}
+            {!usingCustom && (
+              <p className="mt-2 text-xs text-slate-500">
+                Currently showing default demo values. URL me{" "}
+                <code className="rounded bg-slate-100 px-1">
+                  ?income=&amp;emi=&amp;goals=&amp;protection=&amp;emergency=&amp;name=
+                </code>{" "}
+                add karke client-specific view bana sakte hain.
+              </p>
+            )}
           </div>
           <p className="mt-2 text-[11px] text-slate-500 md:text-right">
-            Demo data – not linked to real client records.  
-            Future roadmap: login-based personalised dashboard.
+            Demo data – not linked to real client records.
+            <br />
+            Phase 2: login-based personalised dashboard using same logic.
           </p>
         </div>
 
@@ -169,38 +243,48 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl bg-slate-900 p-5 text-slate-50 text-sm">
+          <div className="rounded-2xl bg-slate-900 p-5 text-sm text-slate-50">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">
               Quick Snapshot
             </p>
             <ul className="mt-3 space-y-2 text-xs">
+              {clientName && (
+                <li>
+                  • Client:{" "}
+                  <span className="font-semibold text-white">
+                    {clientName}
+                  </span>
+                </li>
+              )}
               <li>
                 • Risk Profile:{" "}
-                <span className="font-semibold text-white">{riskProfile}</span>
+                <span className="font-semibold text-white">
+                  {riskProfile}
+                </span>
               </li>
               <li>
                 • EMI Load:{" "}
                 <span className="font-semibold text-white">
-                  {(sampleInputs.totalEmi / sampleInputs.monthlyIncome * 100).toFixed(0)}%
+                  {emiRatioPctText}
                 </span>{" "}
                 of income ({debtStressLabel} stress)
               </li>
               <li>
                 • Goal Coverage:{" "}
                 <span className="font-semibold text-white">
-                  {sampleInputs.goalCoveragePct}%
+                  {inputs.goalCoveragePct}%
                 </span>
               </li>
               <li>
                 • Protection Coverage:{" "}
                 <span className="font-semibold text-white">
-                  {sampleInputs.protectionCoveragePct}%
+                  {inputs.protectionCoveragePct}%
                 </span>
               </li>
               <li>
                 • Emergency Fund:{" "}
                 <span className="font-semibold text-white">
-                  {sampleInputs.emergencyFundMonths} months
+                  {inputs.emergencyFundMonths} months
                 </span>
               </li>
             </ul>
@@ -229,7 +313,7 @@ export default function DashboardPage() {
               {breakdown.debtScore}/100
             </p>
             <p className="mt-1 text-[11px] text-slate-500">
-              EMI load, interest cost aur loan structure health.
+              EMI load, interest cost &amp; loan structure health.
             </p>
           </div>
 
@@ -258,7 +342,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Detail blocks like pehle */}
+        {/* Detail blocks */}
         <div className="mt-8 grid gap-5 md:grid-cols-3">
           {/* Investments */}
           <div className="flex flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
@@ -277,8 +361,8 @@ export default function DashboardPage() {
             </p>
             <p className="mt-2 flex-1 text-sm text-slate-600">
               SIPs aur long term investments major goals ko{" "}
-              {sampleInputs.goalCoveragePct}% tak cover kar rahe hain. Next step –
-              gap wali goals par additional SIP ya restructuring plan banana.
+              {inputs.goalCoveragePct}% tak cover kar rahe hain. Next step – gap
+              wali goals par additional SIP ya restructuring plan banana.
             </p>
             <ul className="mt-3 space-y-1 text-xs text-slate-500">
               <li>• Goal-wise SIP mapping</li>
@@ -303,10 +387,9 @@ export default function DashboardPage() {
               </span>
             </p>
             <p className="mt-2 flex-1 text-sm text-slate-600">
-              Current EMI load approx{" "}
-              {(sampleInputs.totalEmi / sampleInputs.monthlyIncome * 100).toFixed(0)}
-              % hai. Prepayment, refinance ya restructuring options evaluate karne
-              se overall health score improve ho sakta hai.
+              Current EMI load approx {emiRatioPctText} hai. Prepayment,
+              refinance ya restructuring options evaluate karne se overall
+              health score improve ho sakta hai.
             </p>
             <ul className="mt-3 space-y-1 text-xs text-slate-500">
               <li>• All EMIs in one view</li>
@@ -332,7 +415,7 @@ export default function DashboardPage() {
             </p>
             <p className="mt-2 flex-1 text-sm text-slate-600">
               Protection coverage currently{" "}
-              {sampleInputs.protectionCoveragePct}% estimated need ke aas-paas hai.
+              {inputs.protectionCoveragePct}% estimated need ke aas-paas hai.
               Focus areas – term cover, health cover &amp; parents ke medical
               expenses ka buffer.
             </p>
@@ -365,7 +448,7 @@ export default function DashboardPage() {
             </a>
             <a
               href="https://wa.me/919667205638"
-              className="rounded-full border border-slate-200 px-5 py-2 text-xs font-semibold text-slate-50 hover:bg-white/10"
+              className="rounded-full border border-slate-200 px-5 py-2 text-xs font-semibold text-slate-50 hover:bg:white/10"
             >
               Talk on WhatsApp
             </a>
