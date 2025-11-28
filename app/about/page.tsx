@@ -1,5 +1,11 @@
-import TopNav from "../components/TopNav";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "About WinFly India Services Private Limited",
+  description:
+    "WinFly India Services Private Limited is a DPIIT & MSME registered startup simplifying investments, loans and insurance for Indian families.",
+};
 export default function AboutPage() {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
