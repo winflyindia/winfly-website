@@ -1,6 +1,5 @@
 // app/components/TopNav.tsx
 import Link from "next/link";
-import Image from "next/image";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -15,13 +14,8 @@ export default function TopNav() {
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         {/* Brand */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="relative h-9 w-9 overflow-hidden rounded-lg bg-[#0A3D91]">
-            <Image
-              src="/winfly-logo.png"
-              alt="WinFly India Logo"
-              fill
-              className="object-contain p-1.5"
-            />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0A3D91] text-xs font-bold text-white">
+            W
           </div>
           <div className="leading-tight">
             <p className="text-sm font-semibold text-slate-900">
