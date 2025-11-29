@@ -68,7 +68,11 @@ export default function ServicesPage() {
               <li>• Consolidation &amp; balance transfer strategies</li>
               <li>• Prepayment vs investment comparison</li>
             </ul>
+            <a href="/loans" className="mt-3 inline-block text-[11px] font-semibold text-[#0A3D91] hover:underline">
+              View detailed loan advisory →
+              </a>
           </div>
+          
 
           {/* Insurance */}
           <div className="flex flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
