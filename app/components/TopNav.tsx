@@ -12,7 +12,7 @@ const serviceLinks = [
   { href: "/services", label: "All Services" },
   { href: "/investments", label: "Investments & SIPs" },
   { href: "/loans", label: "Loans & EMI Planning" },
-  
+  { href: "/insurance", label: "Insurance & Protection" },
 
   // future:
   // { href: "/investments", label: "Investments & SIPs" },
