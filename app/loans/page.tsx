@@ -17,6 +17,13 @@ function calculateEmi(
 }
 
 export default function LoansPage() {
+  // ✅ Google Apps Script Web App URL (your webhook)
+  const WEBHOOK_URL =
+    "https://script.google.com/macros/s/AKfycbyUo9lwHzgyjHHBXF_2ycX-YSPOyTBaeWd9_FYNUhxZvr4263xJM_w-H8ilOHHq5eb8/exec";
+
+  // ✅ WhatsApp number (your existing one)
+  const WHATSAPP_NUMBER = "919667205638";
+
   // ----- EMI Calculator State -----
   const [calcLoanAmount, setCalcLoanAmount] = useState("1500000");
   const [calcRate, setCalcRate] = useState("9.0");
@@ -57,7 +64,7 @@ export default function LoansPage() {
   const [loanAmount, setLoanAmount] = useState("");
   const [purpose, setPurpose] = useState("");
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!fullName || !mobile || !loanType) {
@@ -65,11 +72,43 @@ export default function LoansPage() {
       return;
     }
 
+    // Basic mobile cleanup (keep last 10 digits)
+    const cleanMobile = mobile.replace(/\D/g, "").slice(-10);
+
+    // ✅ Payload for Google Sheet webhook
+    const payload = {
+      name: fullName,
+      mobile: cleanMobile || mobile,
+      city,
+      loanType,
+      employment: employmentType,
+      salary: monthlyIncome ? Number(monthlyIncome) : "",
+      emi: existingEmiForm ? Number(existingEmiForm) : "",
+      loanAmount: loanAmount ? Number(loanAmount) : "",
+      notes: purpose,
+      source: "WinFly Loan Page",
+      ts: new Date().toISOString(),
+    };
+
+    // ✅ Send to Google Sheet (don’t block WhatsApp)
+    try {
+      // no-cors = avoids CORS errors in browser; request will still reach Apps Script
+      fetch(WEBHOOK_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      console.warn("Sheet webhook failed:", err);
+    }
+
+    // ✅ Existing WhatsApp message flow
     const lines = [
       "New Loan Enquiry from WinFly website 👇",
       "",
       `Name: ${fullName}`,
-      `Mobile: ${mobile}`,
+      `Mobile: ${cleanMobile || mobile}`,
       city ? `City: ${city}` : "",
       loanType ? `Loan Type: ${loanType}` : "",
       employmentType ? `Employment: ${employmentType}` : "",
@@ -82,7 +121,7 @@ export default function LoansPage() {
     ].filter(Boolean);
 
     const text = encodeURIComponent(lines.join("\n"));
-    const whatsappUrl = `https://wa.me/919667205638?text=${text}`;
+    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`;
     window.open(whatsappUrl, "_blank");
   };
 
@@ -103,9 +142,8 @@ export default function LoansPage() {
             </span>
 
             <h1 className="text-3xl font-semibold leading-tight md:text-4xl">
-              Loans jo{" "}
-              <span className="text-[#F3C969]">EMI bhi fit karein</span> aur
-              future goals bhi.
+              Loans jo <span className="text-[#F3C969]">EMI bhi fit karein</span>{" "}
+              aur future goals bhi.
             </h1>
 
             <p className="max-w-xl text-sm text-slate-100/90 md:text-[15px]">
@@ -125,7 +163,7 @@ export default function LoansPage() {
                 Check &amp; apply for loan
               </a>
               <a
-                href="https://wa.me/919667205638"
+                href={`https://wa.me/${WHATSAPP_NUMBER}`}
                 className="rounded-full border border-white/70 px-6 py-2 font-semibold text-white hover:bg-white/10"
               >
                 Share details on WhatsApp
@@ -154,9 +192,7 @@ export default function LoansPage() {
                   </p>
                 </div>
                 <div className="rounded-xl bg-slate-50 p-3">
-                  <p className="text-[10px] text-slate-500">
-                    Total EMIs / Income
-                  </p>
+                  <p className="text-[10px] text-slate-500">Total EMIs / Income</p>
                   <p className="mt-1 text-sm font-semibold text-amber-600">
                     {emiRatioPct}%
                   </p>
@@ -171,8 +207,8 @@ export default function LoansPage() {
 
               <p className="mt-3 text-[11px] text-slate-600">
                 Ye sirf ek rough estimate hai. Actual eligibility, interest rate
-                aur approval har bank/NBFC ke rules ke hisaab se change ho
-                sakta hai.
+                aur approval har bank/NBFC ke rules ke hisaab se change ho sakta
+                hai.
               </p>
             </div>
           </div>
@@ -268,9 +304,7 @@ export default function LoansPage() {
                   </p>
                 </div>
                 <div className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-100">
-                  <p className="text-[10px] text-slate-500">
-                    Total EMI / income
-                  </p>
+                  <p className="text-[10px] text-slate-500">Total EMI / income</p>
                   <p className="mt-1 text-lg font-semibold text-amber-600">
                     {emiRatioPct}%
                   </p>
@@ -312,9 +346,7 @@ export default function LoansPage() {
               </div>
 
               <div className="rounded-2xl bg-slate-900 p-5 text-xs text-slate-100">
-                <h3 className="text-sm font-semibold">
-                  Why WinFly for loans &amp; EMIs?
-                </h3>
+                <h3 className="text-sm font-semibold">Why WinFly for loans &amp; EMIs?</h3>
                 <ul className="mt-2 space-y-1.5">
                   <li>• Product-push nahi, suitability-first approach</li>
                   <li>• Multi-bank/NBFC options via curated partners</li>
@@ -351,9 +383,7 @@ export default function LoansPage() {
                 <span className="mb-2 inline-flex w-fit rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
                   {card.tag}
                 </span>
-                <h3 className="text-sm font-semibold text-slate-900">
-                  {card.title}
-                </h3>
+                <h3 className="text-sm font-semibold text-slate-900">{card.title}</h3>
                 <p className="mt-2 text-xs text-slate-600">{card.desc}</p>
               </div>
             ))}
@@ -372,9 +402,7 @@ export default function LoansPage() {
               </h2>
               <p className="mt-2 text-sm text-slate-600">
                 Form fill karte hi WhatsApp chat open ho jaayegi jahan hum aapka{" "}
-                <span className="font-semibold">
-                  loan &amp; EMI structure calmly discuss
-                </span>{" "}
+                <span className="font-semibold">loan &amp; EMI structure calmly discuss</span>{" "}
                 kar sakte hain.
               </p>
 
@@ -514,8 +542,8 @@ export default function LoansPage() {
                 </button>
 
                 <p className="mt-3 text-[11px] text-slate-500">
-                  WinFly kisi bhi specific approval, interest rate ya sanction
-                  ki guarantee nahi deta. Final decision hamesha respective
+                  WinFly kisi bhi specific approval, interest rate ya sanction ki
+                  guarantee nahi deta. Final decision hamesha respective
                   bank/NBFC policies ke hisaab se hota hai.
                 </p>
               </form>
@@ -558,9 +586,8 @@ export default function LoansPage() {
                       EMI kitni honi chahiye meri income ke hisaab se?
                     </p>
                     <p className="mt-1 text-slate-600">
-                      General thumb rule 30–40% hai, lekin har family ka budget
-                      aur responsibilities alag hoti hain. Isliye hum personalised
-                      view dete hain.
+                      General thumb rule 30–40% hai, lekin har family ka budget aur
+                      responsibilities alag hoti hain. Isliye hum personalised view dete hain.
                     </p>
                   </div>
                   <div>
@@ -568,9 +595,8 @@ export default function LoansPage() {
                       Balance transfer kab sensible hai?
                     </p>
                     <p className="mt-1 text-slate-600">
-                      Jab interest rate difference + remaining tenure milkar
-                      actual saving create kare. Sirf rate dekhenge to galat
-                      decision ho sakta hai – hum pura maths karke dikhate hain.
+                      Jab interest rate difference + remaining tenure milkar actual saving create kare.
+                      Sirf rate dekhenge to galat decision ho sakta hai – hum pura maths karke dikhate hain.
                     </p>
                   </div>
                   <div>
@@ -579,9 +605,8 @@ export default function LoansPage() {
                     </p>
                     <p className="mt-1 text-slate-600">
                       Basic KYC, income proof, bank statements etc. mostly{" "}
-                      <span className="font-semibold">digital scan/PDF</span> se
-                      hi kaam ho jaata hai. Exact list bank/NBFC ke hisaab se
-                      share ki jaati hai.
+                      <span className="font-semibold">digital scan/PDF</span> se hi kaam ho jaata hai.
+                      Exact list bank/NBFC ke hisaab se share ki jaati hai.
                     </p>
                   </div>
                 </div>
@@ -600,9 +625,8 @@ export default function LoansPage() {
                 Confused about multiple EMIs &amp; loans?
               </p>
               <p className="mt-1 text-[11px] text-slate-300">
-                15–20 minute ki clarity call me hum aapko simple language me
-                bata denge ki stay, prepay ya refinance – kaunsa route zyada
-                sensible hai.
+                15–20 minute ki clarity call me hum aapko simple language me bata denge ki
+                stay, prepay ya refinance – kaunsa route zyada sensible hai.
               </p>
             </div>
             <div className="flex flex-wrap gap-2 text-[11px]">
@@ -613,7 +637,7 @@ export default function LoansPage() {
                 Fill loan form
               </a>
               <a
-                href="https://wa.me/919667205638"
+                href={`https://wa.me/${WHATSAPP_NUMBER}`}
                 className="rounded-full border border-slate-500 px-5 py-2 font-semibold text-slate-50 hover:bg-white/10"
               >
                 Chat on WhatsApp
@@ -627,12 +651,8 @@ export default function LoansPage() {
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 px-4 py-2 shadow-sm md:hidden">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 text-xs">
           <div className="flex-1">
-            <p className="font-semibold text-slate-900">
-              Ready to discuss your loan?
-            </p>
-            <p className="text-[11px] text-slate-500">
-              Form ya WhatsApp – jo aapke liye easy ho.
-            </p>
+            <p className="font-semibold text-slate-900">Ready to discuss your loan?</p>
+            <p className="text-[11px] text-slate-500">Form ya WhatsApp – jo aapke liye easy ho.</p>
           </div>
           <div className="flex gap-2">
             <a
@@ -642,7 +662,7 @@ export default function LoansPage() {
               Apply
             </a>
             <a
-              href="https://wa.me/919667205638"
+              href={`https://wa.me/${WHATSAPP_NUMBER}`}
               className="rounded-full border border-slate-300 px-4 py-1.5 font-semibold text-slate-800"
             >
               WhatsApp
